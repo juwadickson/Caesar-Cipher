@@ -112,7 +112,7 @@
                 </form>
             </div>
             <div class="output">
-                <span><b>Output: </b><?php include('server.php');?></span>
+                <span><b>Output: </b><?php include('cipher.php');?></span>
             </div>
         </div>
     </div>
