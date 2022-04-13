@@ -18,17 +18,18 @@
             $shiftCount = $fileDictionary['shiftCount'];
             $alphabet = $fileDictionary['alphabet'];
             $inputText = $fileDictionary['cipherText'];
+            $cipherType = $fileDictionary["cipherType"];
             // Check the Alphabet to Determine the language
             // English => 0 French => 1 Spainish => 2 Turkish => 3
             
             switch ($alphabet) {
                 case 0:
-                    if($fileDictionary["cipherType"] == 0){ // Encrypt
+                    if($cipherType == 0){ // Encrypt
                         echo '
                             <span><h5>Shift Count : '.$shiftCount.'</h5><h5>CipherType : Encrypt</h5><h5>Alphabet : English</h5> </span>
                             <h4>'.encryptEnglishWords($inputText, $shiftCount).'</h4>
                         ';
-                    }elseif($fileDictionary["cipherType"] == 1){ // Decrypt
+                    }elseif($cipherType == 1){ // Decrypt
                         echo '
                         <span><h5>Shift Count : '.$shiftCount.'</h5><h5>CipherType : Decrypt</h5><h5>Alphabet : English</h5> </span>
                             <h4>'.decryptEnglishWords($inputText, $shiftCount).'</h4>
@@ -36,12 +37,12 @@
                     }
                     break;
                 case 1:
-                    if($fileDictionary["cipherType"] == 0){ // Encrypt
+                    if($cipherType == 0){ // Encrypt
                         echo '
                         <span><h5>Shift Count : '.$shiftCount.'</h5><h5>CipherType : Encrypt</h5><h5>Alphabet : French</h5> </span>
                             <h4>'.encryptEnglishWords($inputText, $shiftCount).'</h4>
                         ';
-                    }elseif($fileDictionary["cipherType"] == 1){ // Decrypt
+                    }elseif($cipherType == 1){ // Decrypt
                         echo '
                         <span><h5>Shift Count : '.$shiftCount.'</h5><h5>CipherType : Decrypt</h5><h5>Alphabet : French</h5> </span>
                             <h4>'.decryptEnglishWords($inputText, $shiftCount).'</h4>
@@ -49,12 +50,12 @@
                     }
                     break;
                 case 2:
-                    if($fileDictionary["cipherType"] == 0){ // Encrypt
+                    if($cipherType == 0){ // Encrypt
                         echo '
                         <span><h5>Shift Count : '.$shiftCount.'</h5><h5>CipherType : Encrypt</h5><h5>Alphabet : Spanish</h5> </span>
                             <h4>'.encryptSpanishWords($inputText, $shiftCount).'</h4>
                         ';
-                    }elseif($fileDictionary["cipherType"] == 1){ // Decrypt
+                    }elseif($cipherType == 1){ // Decrypt
                         echo '
                         <span><h5>Shift Count : '.$shiftCount.'</h5><h5>CipherType : Decrypt</h5><h5>Alphabet : Spanish</h5> </span>
                             <h4>'.decryptSpanishWords($inputText, $shiftCount).'</h4>
@@ -62,12 +63,12 @@
                     }
                     break;
                 case 3:
-                    if($fileDictionary["cipherType"] == 0){ // Encrypt
+                    if($cipherType == 0){ // Encrypt
                         echo '
                         <span><h5>Shift Count : '.$shiftCount.'</h5><h5>CipherType : Encrypt</h5><h5>Alphabet : Turkish</h5> </span>
                             <h4>'.encryptTurkishWords($inputText, $shiftCount).'</h4>
                         ';
-                    }elseif($fileDictionary["cipherType"] == 1){ // Decrypt
+                    }elseif($cipherType == 1){ // Decrypt
                         echo '
                         <span><h5>Shift Count : '.$shiftCount.'</h5><h5>CipherType : Decrypt</h5><h5>Alphabet : Turkish</h5> </span>
                             <h4>'.decryptTurkishWords($inputText, $shiftCount).'</h4>
@@ -97,10 +98,12 @@
     }
 
     function verifyInputFormat($input){
-        $pattern = '/^(?:[1-9]|[1-9][0-9]+)(:)[01](:)[0123](:)[a-zA-Z]+( [a-zA-Z_]+)*$/';
+        // Regular expression to accept Input File format
+        $pattern = '/^(?:[-+]?([1-9]|[1-9][0-9]+))(:)[01](:)[0123](:)[a-zA-Z0-9\s?><;,\(\){}[\]\-_+=!@#$%\^&*|\'ñÑçÇğĞıÏöÖşŞüÜ]*$/';
         return preg_match_all($pattern, $input);
     };
 
+    
     function encryptEnglishWords($text, $shift){
 
         $englishUcAlpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -118,6 +121,11 @@
                 $cipherText .= $letter;
             }elseif($letter == " "){
                 $cipherText .= $letter;
+            }elseif(preg_match('/[?><;,.\(\){}[\]\-_+=!@#$%\^&*|\']/', $letter)){
+                $cipherText .= $letter;
+            }elseif(preg_match('/[ñÑçÇğĞıÏöÖşŞüÜ]/', $letter)){
+                return "Error: Not an English word";
+                break;
             }elseif($lowercase){
                 $enc = ($lowercase + $shift) % 26;
                 $cipherText .= $englishLcAlpha[$enc];
@@ -143,14 +151,18 @@
             // Return Number if letter is number
             if($letter == " "){
                 $cipherText .= $letter;
+            }elseif(is_numeric($letter)){
+                $cipherText .= $letter;
+            }elseif(preg_match('/[?><;,.\(\){}[\]\-_+=!@#$%\^&*|\']/', $letter)){
+                $cipherText .= $letter;
             }elseif($letterPositionInLcAlpha){
-                $cipherText .= $spanishLcAlpha[(($letterPositionInLcAlpha + $shift) % count($spanishLcAlpha))];
+                $cipherText .= $spanishUcAlpha[(($letterPositionInLcAlpha + $shift) % count($spanishLcAlpha))];
             }
             else{// for uppercase
                 $cipherText .= $spanishUcAlpha[(($letterPositionInUcAlpha + $shift) % count($spanishUcAlpha))];
             }
         }
-        return strtoupper($cipherText);
+        return $cipherText;
     }
 
     function encryptTurkishWords($text, $shift){
@@ -166,14 +178,18 @@
             // Return Number if letter is number
             if($letter == " "){
                 $cipherText .= $letter;
+            }elseif(is_numeric($letter)){
+                $cipherText .= $letter;
+            }elseif(preg_match('/[?><;,.\(\){}[\]\-_+=!@#$%\^&*|\']/', $letter)){
+                $cipherText .= $letter;
             }elseif($letterPositionInLcAlpha){
-                $cipherText .= $turkishLcAlpha[(($letterPositionInLcAlpha + $shift) % count($turkishLcAlpha))];
+                $cipherText .= $turkishUcAlpha[(($letterPositionInLcAlpha + $shift) % count($turkishLcAlpha))];
             }
             else{// for uppercase
                 $cipherText .= $turkishUcAlpha[(($letterPositionInUcAlpha + $shift) % count($turkishUcAlpha))];
             }
         }
-        return strtoupper($cipherText);
+        return $cipherText;
     };
 
     function decryptSpanishWords($text, $shift){
@@ -191,14 +207,71 @@
             // Return Number if letter is number
             if($letter == " "){
                 $plainText .= $letter;
+            }elseif(is_numeric($letter)){
+                $plainText .= $letter;
+            }elseif(preg_match('/[?><;,.\(\){}[\]\-_+=!@#$%\^&*|\']/', $letter)){
+                $plainText .= $letter;
             }elseif($letterPositionInLcAlpha){
-                $plainText .= $spanishLcAlpha[(($letterPositionInLcAlpha - $shift) % $len)];
+                $index = ($letterPositionInLcAlpha - $shift) % $len;
+                if($index < 0){
+                    $newindex = $len + $index;
+                    $plainText .= $spanishLcAlpha[$newindex];
+                }else{
+                    $plainText .= $spanishLcAlpha[$index];
+                }
             }
             else{// for uppercase
-                $plainText .= $spanishUcAlpha[(($letterPositionInUcAlpha - $shift) % $len)];
+                $index = ($letterPositionInUcAlpha - $shift) % $len;
+                if($index < 0){
+                    $newindex = $len + $index;
+                    $plainText .= $spanishLcAlpha[$newindex];
+                }else{
+                    $plainText .= $spanishLcAlpha[$index];
+                }
             }
         }
-        return strtolower($plainText);
+        return $plainText;
+    }
+
+    function decryptTurkishWords($text, $shift){
+        $turkishLcAlpha = ['a','b','c','ç','d','e','f','g','ğ','h','ı','i','j','k','ŀ','m','n','o','ö','p','r','s','ş','t','u','ü','v','y','z'];
+        $turkishUcAlpha = ['A','B','C','Ç','D','E','F','G','Ğ','H','I','Ï','J','K','L','M','N','O','Ö','P','R','S','Ş','T','U','Ü','V','Y','Z'];
+
+        $len = count($turkishUcAlpha);
+        $plainText = "";
+        for ($i=0; $i < strlen($text) ; $i++) { 
+            $letter = $text[$i];
+
+            $letterPositionInUcAlpha = array_search($letter,$turkishUcAlpha);
+            $letterPositionInLcAlpha = array_search($letter,$turkishLcAlpha);
+            
+            // Return Number if letter is number
+            if($letter == " "){
+                $plainText .= $letter;
+            }elseif(is_numeric($letter)){
+                $plainText .= $letter;
+            }elseif(preg_match('/[?><;,.\(\){}[\]\-_+=!@#$%\^&*|\']/', $letter)){
+                $plainText .= $letter;
+            }elseif($letterPositionInLcAlpha){
+                $index = ($letterPositionInLcAlpha - $shift) % $len;
+                if($index < 0){
+                    $newindex = $len + $index;
+                    $plainText .= $turkishLcAlpha[$newindex];
+                }else{
+                    $plainText .= $turkishLcAlpha[$index];
+                }
+            }
+            else{// for uppercase
+                $index = ($letterPositionInUcAlpha - $shift) % $len;
+                if($index < 0){
+                    $newindex = $len + $index;
+                    $plainText .= $turkishLcAlpha[$newindex];
+                }else{
+                    $plainText .= $turkishLcAlpha[$index];
+                }
+            }
+        }
+        return $plainText;
     }
 
     function decryptEnglishWords($text, $shift){
@@ -217,6 +290,11 @@
                 $plainText .= $letter;
             }elseif($letter == " "){
                 $plainText .= $letter;
+            }elseif(preg_match('/[?><;,.\(\){}[\]\-_+=!@#$%\^&*|\']/', $letter)){
+                $plainText .= $letter;
+            }elseif(preg_match('/[ñÑçÇğĞıÏöÖşŞüÜ]/', $letter)){
+                return "Error: Not an English word";
+                break;
             }elseif($lowercase){
                 $enc = ($lowercase - $shift) % 26;
                 $plainText .= $englishLcAlpha[$enc];
